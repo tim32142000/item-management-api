@@ -3,6 +3,10 @@ import sqlite3
 DB_NAME = "experiments.db"
 
 
+def set_db_name(db_name):
+    global DB_NAME
+    DB_NAME = db_name
+
 def get_connection():
     conn = sqlite3.connect(DB_NAME)
     conn.row_factory = sqlite3.Row
@@ -49,9 +53,11 @@ def get_experiment(id: int):
         )
 
         row = cursor.fetchone()
-        dict_row = dict(row)
 
-        return dict_row
+        if row is None:
+            return None
+
+        return dict(row)
 
 
 def create_experiment(name, frequency, damping, amplitude):

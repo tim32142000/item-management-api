@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, status
 from pydantic import BaseModel, Field
 
 from database import (
@@ -10,7 +10,6 @@ from database import (
     update_experiment,
 )
 
-init_db()
 
 app = FastAPI()
 
@@ -30,13 +29,16 @@ class ExperimentResponse(BaseModel):
     amplitude: float
 
 
-
 @app.get("/")
 def root():
     return {"message": "Experiment API is running"}
 
 
-@app.post("/experiments", response_model=ExperimentResponse)
+@app.post(
+    "/experiments",
+    response_model=ExperimentResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_experiment_api(experiment: ExperimentCreate):
     new_id = create_experiment(
         experiment.name, experiment.frequency, experiment.damping, experiment.amplitude
@@ -50,7 +52,6 @@ def get_experiments_api():
     return get_experiments()
 
 
-
 @app.get("/experiments/{id}", response_model=ExperimentResponse)
 def get_experiment_api(id: int):
     row = get_experiment(id)
@@ -61,20 +62,20 @@ def get_experiment_api(id: int):
     # return dict(row)
 
     # test
-    return {
-        **dict(row),
-        "secret": "hello"
-    }
+    return {**dict(row), "secret": "hello"}
 
 
-@app.delete("/experiments/{id}")
+@app.delete(
+    "/experiments/{id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
 def delete_experiment_api(id: int):
     is_found = delete_experiment(id)
 
     if not is_found:
         raise HTTPException(status_code=404, detail="Experiment not found")
 
-    return {"message": "Experiment deleted"}
+    
 
 
 @app.put("/experiments/{id}", response_model=ExperimentResponse)
