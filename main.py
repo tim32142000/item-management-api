@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from database import (
     init_db,
@@ -15,11 +15,11 @@ init_db()
 app = FastAPI()
 
 
-class Experiment(BaseModel):
+class ExperimentCreate(BaseModel):
     name: str
-    frequency: float
-    damping: float
-    amplitude: float
+    frequency: float = Field(gt=0)
+    damping: float = Field(ge=0)
+    amplitude: float = Field(gt=0)
 
 
 class ExperimentResponse(BaseModel):
@@ -30,13 +30,14 @@ class ExperimentResponse(BaseModel):
     amplitude: float
 
 
+
 @app.get("/")
 def root():
     return {"message": "Experiment API is running"}
 
 
 @app.post("/experiments", response_model=ExperimentResponse)
-def create_experiment_api(experiment: Experiment):
+def create_experiment_api(experiment: ExperimentCreate):
     new_id = create_experiment(
         experiment.name, experiment.frequency, experiment.damping, experiment.amplitude
     )
@@ -57,7 +58,13 @@ def get_experiment_api(id: int):
     if row is None:
         raise HTTPException(status_code=404, detail="Experiment not found")
 
-    return dict(row)
+    # return dict(row)
+
+    # test
+    return {
+        **dict(row),
+        "secret": "hello"
+    }
 
 
 @app.delete("/experiments/{id}")
@@ -71,7 +78,7 @@ def delete_experiment_api(id: int):
 
 
 @app.put("/experiments/{id}", response_model=ExperimentResponse)
-def update_experiment_api(id: int, experiment: Experiment):
+def update_experiment_api(id: int, experiment: ExperimentCreate):
     is_found = update_experiment(
         id,
         experiment.name,

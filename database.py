@@ -15,9 +15,9 @@ def init_db():
     CREATE TABLE IF NOT EXISTS experiments (
         id INTEGER PRIMARY KEY,
         name TEXT NOT NULL,
-        frequency REAL NOT NULL,
-        damping REAL NOT NULL,
-        amplitude REAL NOT NULL
+        frequency REAL NOT NULL CHECK (frequency > 0),
+        damping REAL NOT NULL CHECK (damping >= 0),
+        amplitude REAL NOT NULL CHECK (amplitude > 0)
     )
     """)
 
@@ -49,8 +49,9 @@ def get_experiment(id: int):
         )
 
         row = cursor.fetchone()
+        dict_row = dict(row)
 
-        return row
+        return dict_row
 
 
 def create_experiment(name, frequency, damping, amplitude):
