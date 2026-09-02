@@ -169,7 +169,7 @@ def test_get_invalid_experiment_id(client):
 
 def test_delete_invalid_experiment_id(client):
     response = client.delete("/experiments/999999")
-    
+
     assert response.status_code == 404
 
 
@@ -190,3 +190,28 @@ def test_create_invalid_experiment_does_not_create_data(client):
 
     assert response.status_code == 200
     assert response.json() == []
+
+
+def test_update_experiment_invalid_amplitude(client):
+    client.post(
+        "/experiments",
+        json={
+            "name": "test experiment",
+            "frequency": "2.5",
+            "damping": "0.2",
+            "amplitude": "28",
+        }
+    )
+
+    response = client.put(
+        "/experiments/1",
+        json={
+            "name": "test experiment",
+            "frequency": "2.5",
+            "damping": "0.2",
+            "amplitude": "101",
+        },
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Amplitude can not greater than 100"}

@@ -6,9 +6,10 @@ with sqlite3.connect(DB_NAME) as conn:
 
     cursor = conn.execute(
         """
-        INSERT INTO experiments
-        (name, frequency, damping, amplitude)
-        VALUES (?, ?, ?, ?)
-    """, ('test', -1, 0.2, 4.7))
+        EXPLAIN QUERY PLAN
+        SELECT *
+        FROM experiments
+        WHERE name = 'test experiment';
+    """)
 
-    conn.commit()
+    print(list(cursor))

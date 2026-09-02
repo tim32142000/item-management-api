@@ -1,32 +1,31 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, HTTPException, status
 from pydantic import BaseModel, Field
+
+from models import ExperimentCreate, ExperimentResponse
+from database_models import Experiment
 
 from database import (
     init_db,
     get_experiments,
-    get_experiment,
-    create_experiment,
     delete_experiment,
-    update_experiment,
+)
+
+from service import (
+    create_experiment_service,
+    get_experiment_service,
+    update_experiment_service,
 )
 
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()
+    yield
 
 
-class ExperimentCreate(BaseModel):
-    name: str
-    frequency: float = Field(gt=0)
-    damping: float = Field(ge=0)
-    amplitude: float = Field(gt=0)
-
-
-class ExperimentResponse(BaseModel):
-    id: int
-    name: str
-    frequency: float
-    damping: float
-    amplitude: float
+app = FastAPI(lifespan=lifespan)
 
 
 @app.get("/")
@@ -40,11 +39,15 @@ def root():
     status_code=status.HTTP_201_CREATED,
 )
 def create_experiment_api(experiment: ExperimentCreate):
-    new_id = create_experiment(
-        experiment.name, experiment.frequency, experiment.damping, experiment.amplitude
+    db_experiment = Experiment(
+        name=experiment.name,
+        frequency=experiment.frequency,
+        damping=experiment.damping,
+        amplitude=experiment.amplitude,
     )
 
-    return {"id": new_id, **experiment.model_dump()}
+    return create_experiment_service(db_experiment)
+
 
 
 @app.get("/experiments", response_model=list[ExperimentResponse])
@@ -54,15 +57,12 @@ def get_experiments_api():
 
 @app.get("/experiments/{id}", response_model=ExperimentResponse)
 def get_experiment_api(id: int):
-    row = get_experiment(id)
+    row = get_experiment_service(id)
 
     if row is None:
         raise HTTPException(status_code=404, detail="Experiment not found")
 
-    # return dict(row)
-
-    # test
-    return {**dict(row), "secret": "hello"}
+    return row
 
 
 @app.delete(
@@ -75,22 +75,23 @@ def delete_experiment_api(id: int):
     if not is_found:
         raise HTTPException(status_code=404, detail="Experiment not found")
 
-    
-
 
 @app.put("/experiments/{id}", response_model=ExperimentResponse)
 def update_experiment_api(id: int, experiment: ExperimentCreate):
-    is_found = update_experiment(
-        id,
-        experiment.name,
-        experiment.frequency,
-        experiment.damping,
-        experiment.amplitude,
+    db_experiment = Experiment(
+        id=id,
+        name=experiment.name,
+        frequency=experiment.frequency,
+        damping=experiment.damping,
+        amplitude=experiment.amplitude,
     )
 
-    if not is_found:
+    try:
+        updated_experiment = update_experiment_service(db_experiment)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    if updated_experiment is None:
         raise HTTPException(status_code=404, detail="Experiment not found")
 
-    row = get_experiment(id)
-
-    return row
+    return updated_experiment

@@ -1,11 +1,14 @@
 import sqlite3
 
+from database_models import Experiment
+
 DB_NAME = "experiments.db"
 
 
 def set_db_name(db_name):
     global DB_NAME
     DB_NAME = db_name
+
 
 def get_connection():
     conn = sqlite3.connect(DB_NAME)
@@ -29,7 +32,7 @@ def init_db():
     conn.close()
 
 
-def get_experiments():
+def get_experiments() -> list[Experiment]:
     with get_connection() as conn:
         cursor = conn.execute("""
         SELECT *
@@ -38,10 +41,19 @@ def get_experiments():
 
         rows = cursor.fetchall()
 
-        return [dict(row) for row in rows]
+        return [
+            Experiment(
+                id=row["id"],
+                name=row["name"],
+                frequency=row["frequency"],
+                damping=row["damping"],
+                amplitude=row["amplitude"],
+            )
+            for row in rows
+        ]
 
 
-def get_experiment(id: int):
+def get_experiment(id: int) -> Experiment | None:
     with get_connection() as conn:
         cursor = conn.execute(
             """
@@ -57,10 +69,19 @@ def get_experiment(id: int):
         if row is None:
             return None
 
-        return dict(row)
+        experiment = Experiment(
+            id=row["id"],
+            name=row["name"],
+            frequency=row["frequency"],
+            damping=row["damping"],
+            amplitude=row["amplitude"],
+        )
 
 
-def create_experiment(name, frequency, damping, amplitude):
+        return experiment
+
+
+def create_experiment(experiment: Experiment) -> int:
     with get_connection() as conn:
         cursor = conn.execute(
             """
@@ -68,7 +89,12 @@ def create_experiment(name, frequency, damping, amplitude):
             (name, frequency, damping, amplitude)
             VALUES (?, ?, ?, ?)
         """,
-            (name, frequency, damping, amplitude),
+            (
+                experiment.name,
+                experiment.frequency,
+                experiment.damping,
+                experiment.amplitude,
+            ),
         )
 
         conn.commit()
@@ -76,7 +102,7 @@ def create_experiment(name, frequency, damping, amplitude):
         return cursor.lastrowid
 
 
-def delete_experiment(id: int):
+def delete_experiment(id: int) -> bool:
     with get_connection() as conn:
         cursor = conn.execute(
             """
@@ -91,7 +117,7 @@ def delete_experiment(id: int):
         return cursor.rowcount > 0
 
 
-def update_experiment(id: int, name, frequency, damping, amplitude):
+def update_experiment(experiment: Experiment) -> bool:
     with get_connection() as conn:
 
         cursor = conn.execute(
@@ -104,11 +130,11 @@ def update_experiment(id: int, name, frequency, damping, amplitude):
             where id = ?
         """,
             (
-                name,
-                frequency,
-                damping,
-                amplitude,
-                id,
+                experiment.name,
+                experiment.frequency,
+                experiment.damping,
+                experiment.amplitude,
+                experiment.id,
             ),
         )
 
