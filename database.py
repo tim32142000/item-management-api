@@ -1,8 +1,8 @@
 import sqlite3
 
-from database_models import Experiment
+from database_models import Item
 
-DB_NAME = "experiments.db"
+DB_NAME = "items.db"
 
 
 def set_db_name(db_name):
@@ -20,12 +20,12 @@ def get_connection():
 def init_db():
     conn = get_connection()
     conn.execute("""
-    CREATE TABLE IF NOT EXISTS experiments (
+    CREATE TABLE IF NOT EXISTS items (
         id INTEGER PRIMARY KEY,
-        name TEXT NOT NULL,
-        frequency REAL NOT NULL CHECK (frequency > 0),
-        damping REAL NOT NULL CHECK (damping >= 0),
-        amplitude REAL NOT NULL CHECK (amplitude > 0)
+        name TEXT NOT NULL CHECK (length(name) > 0),
+        category TEXT NOT NULL,
+        price INTEGER NOT NULL CHECK (price >= 0),
+        quantity INTEGER NOT NULL CHECK (quantity >= 0)
     )
     """)
 
@@ -33,32 +33,32 @@ def init_db():
     conn.close()
 
 
-def get_experiments(conn) -> list[Experiment]:
+def get_items(conn) -> list[Item]:
 
     cursor = conn.execute("""
     SELECT *
-    FROM experiments
+    FROM items
     """)
 
     rows = cursor.fetchall()
 
     return [
-        Experiment(
+        Item(
             id=row["id"],
             name=row["name"],
-            frequency=row["frequency"],
-            damping=row["damping"],
-            amplitude=row["amplitude"],
+            category=row["category"],
+            price=row["price"],
+            quantity=row["quantity"],
         )
         for row in rows
     ]
 
 
-def get_experiment(conn, id: int) -> Experiment | None:
+def get_item(conn, id: int) -> Item | None:
     cursor = conn.execute(
         """
         SELECT *
-        FROM experiments
+        FROM items
         WHERE id = ?
     """,
         (id,),
@@ -69,39 +69,39 @@ def get_experiment(conn, id: int) -> Experiment | None:
     if row is None:
         return None
 
-    experiment = Experiment(
+    item = Item(
         id=row["id"],
         name=row["name"],
-        frequency=row["frequency"],
-        damping=row["damping"],
-        amplitude=row["amplitude"],
+        category=row["category"],
+        price=row["price"],
+        quantity=row["quantity"],
     )
 
-    return experiment
+    return item
 
 
-def create_experiment(conn, experiment: Experiment) -> int:
+def create_item(conn, item: Item) -> int:
     cursor = conn.execute(
         """
-        INSERT INTO experiments
-        (name, frequency, damping, amplitude)
+        INSERT INTO items
+        (name, category, price, quantity)
         VALUES (?, ?, ?, ?)
     """,
         (
-            experiment.name,
-            experiment.frequency,
-            experiment.damping,
-            experiment.amplitude,
+            item.name,
+            item.category,
+            item.price,
+            item.quantity,
         ),
     )
 
     return cursor.lastrowid
 
 
-def delete_experiment(conn, id: int) -> bool:
+def delete_item(conn, id: int) -> bool:
     cursor = conn.execute(
         """
-        DELETE FROM experiments
+        DELETE FROM items
         WHERE id = ?
         """,
         (id,),
@@ -110,22 +110,22 @@ def delete_experiment(conn, id: int) -> bool:
     return cursor.rowcount > 0
 
 
-def update_experiment(conn, experiment: Experiment) -> bool:
+def update_item(conn, item: Item) -> bool:
     cursor = conn.execute(
         """
-        UPDATE experiments
+        UPDATE items
         SET name = ?,
-            frequency = ?,
-            damping = ?,
-            amplitude = ?
+            category = ?,
+            price = ?,
+            quantity = ?
         where id = ?
     """,
         (
-            experiment.name,
-            experiment.frequency,
-            experiment.damping,
-            experiment.amplitude,
-            experiment.id,
+            item.name,
+            item.category,
+            item.price,
+            item.quantity,
+            item.id,
         ),
     )
 

@@ -2,9 +2,9 @@ from dataclasses import dataclass
 
 
 @dataclass
-class Experiment:
+class Item:
     name: str
-    frequency: float
-    damping: float
-    amplitude: float
+    category: str
+    price: int
+    quantity: int
     id: int | None = None

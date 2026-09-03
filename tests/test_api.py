@@ -20,17 +20,17 @@ def test_root(client):
     response = client.get("/")
 
     assert response.status_code == 200
-    assert response.json() == {"message": "Experiment API is running"}
+    assert response.json() == {"message": "Item API is running"}
 
 
-def test_create_experiment(client):
+def test_create_item(client):
     response = client.post(
-        "/experiments",
+        "/items",
         json={
-            "name": "pytest experiment",
-            "frequency": "2.5",
-            "damping": "0.2",
-            "amplitude": "4.7",
+            "name": "pytest item",
+            "category": "test",
+            "price": 25,
+            "quantity": 10,
         },
     )
 
@@ -39,71 +39,71 @@ def test_create_experiment(client):
     data = response.json()
 
     assert data["id"] > 0
-    assert data["name"] == "pytest experiment"
-    assert data["frequency"] == 2.5
-    assert data["damping"] == 0.2
-    assert data["amplitude"] == 4.7
+    assert data["name"] == "pytest item"
+    assert data["category"] == "test"
+    assert data["price"] == 25
+    assert data["quantity"] == 10
 
 
-def test_get_experiments(client):
-    response = client.get("/experiments")
+def test_get_items(client):
+    response = client.get("/items")
 
     assert response.status_code == 200
     assert response.json() == []
 
 
-def test_get_experiment(client):
+def test_get_item(client):
     create_response = client.post(
-        "/experiments",
+        "/items",
         json={
-            "name": "test experiment",
-            "frequency": 2.5,
-            "damping": 0.2,
-            "amplitude": 4.7,
+            "name": "test item",
+            "category": "test",
+            "price": 2,
+            "quantity": 47,
         },
     )
 
     assert create_response.status_code == 201
 
-    experiment_id = create_response.json()["id"]
+    item_id = create_response.json()["id"]
 
-    response = client.get(f"/experiments/{experiment_id}")
+    response = client.get(f"/items/{item_id}")
 
     assert response.status_code == 200
 
     data = response.json()
 
-    assert data["id"] == experiment_id
-    assert data["name"] == "test experiment"
-    assert data["frequency"] == 2.5
-    assert data["damping"] == 0.2
-    assert data["amplitude"] == 4.7
+    assert data["id"] == item_id
+    assert data["name"] == "test item"
+    assert data["category"] == "test"
+    assert data["price"] == 2
+    assert data["quantity"] == 47
 
 
-def test_update_experiment(client):
+def test_update_item(client):
     # 建立資料
     create_response = client.post(
-        "/experiments",
+        "/items",
         json={
-            "name": "test experiment",
-            "frequency": 2.5,
-            "damping": 0.2,
-            "amplitude": 4.7,
+            "name": "test item",
+            "category": "test",
+            "price": 2,
+            "quantity": 47,
         },
     )
 
     assert create_response.status_code == 201
 
-    experiment_id = create_response.json()["id"]
+    item_id = create_response.json()["id"]
 
     # 更新資料
     update_response = client.put(
-        f"/experiments/{experiment_id}",
+        f"/items/{item_id}",
         json={
             "name": "test update",
-            "frequency": 5.5,
-            "damping": 0.5,
-            "amplitude": 9.7,
+            "category": "test",
+            "price": 5,
+            "quantity": 97,
         },
     )
 
@@ -111,107 +111,110 @@ def test_update_experiment(client):
 
     data = update_response.json()
 
-    assert data["id"] == experiment_id
+    assert data["id"] == item_id
     assert data["name"] == "test update"
-    assert data["frequency"] == 5.5
-    assert data["damping"] == 0.5
-    assert data["amplitude"] == 9.7
+    assert data["category"] == "test"
+    assert data["price"] == 5
+    assert data["quantity"] == 97
 
 
-def test_delete_experiment(client):
+def test_delete_item(client):
     # 建立資料
     create_response = client.post(
-        "/experiments",
+        "/items",
         json={
-            "name": "test experiment",
-            "frequency": 2.5,
-            "damping": 0.2,
-            "amplitude": 4.7,
+            "name": "test item",
+            "category": "test",
+            "price": 2,
+            "quantity": 47,
         },
     )
 
     assert create_response.status_code == 201
 
-    experiment_id = create_response.json()["id"]
+    item_id = create_response.json()["id"]
 
     # 刪除資料
     delete_response = client.delete(
-        f"/experiments/{experiment_id}",
+        f"/items/{item_id}",
     )
 
     assert delete_response.status_code == 204
 
     # 確認 get 拿不到資料
-    get_response = client.get(f"/experiments/{experiment_id}")
+    get_response = client.get(f"/items/{item_id}")
 
     assert get_response.status_code == 404
 
 
-def test_create_experiment_invalid_frequency(client):
+def test_create_item_invalid_type(client):
     response = client.post(
-        "/experiments",
+        "/items",
         json={
-            "name": "invalid experiment",
-            "frequency": -1,
-            "damping": 0.2,
-            "amplitude": 4.7,
+            "name": "invalid item",
+            "category": "test",
+            "price": 2,
+            "quantity": "invalid",
         },
     )
 
     assert response.status_code == 422
 
 
-def test_get_invalid_experiment_id(client):
-    response = client.get("/experiments/999999")
+def test_get_invalid_item_id(client):
+    response = client.get("/items/999999")
 
     assert response.status_code == 404
 
 
-def test_delete_invalid_experiment_id(client):
-    response = client.delete("/experiments/999999")
+def test_delete_invalid_item_id(client):
+    response = client.delete("/items/999999")
 
     assert response.status_code == 404
 
 
-def test_create_invalid_experiment_does_not_create_data(client):
+def test_create_invalid_item_does_not_create_data(client):
     response = client.post(
-        "/experiments",
+        "/items",
         json={
-            "name": "invalid experiment",
-            "frequency": -1,
-            "damping": 0.2,
-            "amplitude": 4.7,
+            "name": "invalid item",
+            "category": "test",
+            "price": -2,
+            "quantity": 47,
         },
     )
 
     assert response.status_code == 422
 
-    response = client.get("/experiments")
+    response = client.get("/items")
 
     assert response.status_code == 200
     assert response.json() == []
 
 
-def test_update_experiment_invalid_amplitude(client):
-    client.post(
-        "/experiments",
+def test_update_item_invalid_quantity(client):
+    create_response = client.post(
+        "/items",
         json={
-            "name": "test experiment",
-            "frequency": "2.5",
-            "damping": "0.2",
-            "amplitude": "28",
-        }
+            "name": "test item",
+            "category": "test",
+            "price": 2,
+            "quantity": 7354,
+        },
     )
 
+    assert create_response.status_code == 201
+    item_id = create_response.json()["id"]
+
     response = client.put(
-        "/experiments/1",
+        f"/items/{item_id}",
         json={
-            "name": "test experiment",
-            "frequency": "2.5",
-            "damping": "0.2",
-            "amplitude": "101",
+            "name": "test update",
+            "category": "test",
+            "price": 2,
+            "quantity": 17354,
         },
     )
 
     assert response.status_code == 400
-    assert response.json() == {"detail": "Amplitude can not greater than 100"}
+    assert response.json() == {"detail": "Quantity can not greater than 10000"}

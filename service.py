@@ -1,47 +1,47 @@
 from database import (
-    create_experiment,
-    get_experiments,
-    get_experiment,
-    update_experiment,
-    delete_experiment,
+    create_item,
+    get_items,
+    get_item,
+    update_item,
+    delete_item,
     get_connection,
 )
-from database_models import Experiment
+from database_models import Item
 
 # Business Rule in this file
 
 
-def validate_experiment(experiment: Experiment):
-    if experiment.amplitude > 100:
-        raise ValueError("Amplitude can not greater than 100")
+def validate_item(item: Item):
+    if item.quantity > 10000:
+        raise ValueError("Quantity can not greater than 10000")
 
 
-def get_experiments_service() -> list[Experiment]:
+def get_items_service() -> list[Item]:
     print("service: entered")
     with get_connection() as conn:
 
-        experiments = get_experiments(conn)
+        items = get_items(conn)
 
-        return experiments
+        return items
 
 
-def get_experiment_service(id: int) -> Experiment | None:
+def get_item_service(id: int) -> Item | None:
     with get_connection() as conn:
-        return get_experiment(conn, id)
+        return get_item(conn, id)
 
 
-def update_experiment_service(experiment: Experiment) -> Experiment | None:
+def update_item_service(item: Item) -> Item | None:
     conn = get_connection()
 
     try:
-        before_update = get_experiment(conn, experiment.id)
+        before_update = get_item(conn, item.id)
 
         if before_update is None:
             return None
 
-        validate_experiment(experiment)
+        validate_item(item)
 
-        update_experiment(conn, experiment)
+        update_item(conn, item)
 
         conn.commit()
 
@@ -52,17 +52,17 @@ def update_experiment_service(experiment: Experiment) -> Experiment | None:
     finally:
         conn.close()
 
-    return experiment
+    return item
 
 
-def create_experiment_service(experiment: Experiment) -> Experiment:
+def create_item_service(item: Item) -> Item:
     conn = get_connection()
 
     try:
-        validate_experiment(experiment)
+        validate_item(item)
 
-        new_id = create_experiment(conn, experiment)
-        experiment.id = new_id
+        new_id = create_item(conn, item)
+        item.id = new_id
 
         conn.commit()
     except Exception:
@@ -74,21 +74,21 @@ def create_experiment_service(experiment: Experiment) -> Experiment:
 
         conn.close()
 
-    return experiment
+    return item
 
 
-def create_two_experiments_service(
-    experiment1: Experiment,
-    experiment2: Experiment,
+def create_two_items_service(
+    item1: Item,
+    item2: Item,
 ):
     conn = get_connection()
 
     try:
-        id1 = create_experiment(conn, experiment1)
-        experiment1.id = id1
+        id1 = create_item(conn, item1)
+        item1.id = id1
 
-        id2 = create_experiment(conn, experiment2)
-        experiment2.id = id2
+        id2 = create_item(conn, item2)
+        item2.id = id2
 
         conn.commit()
     except Exception:
@@ -98,19 +98,19 @@ def create_two_experiments_service(
     finally:
         conn.close()
 
-    return experiment1, experiment2
+    return item1, item2
 
 
-def delete_experiment_service(id: int) -> bool:
+def delete_item_service(id: int) -> bool:
     conn = get_connection()
 
     try:
-        before_delete = get_experiment(conn, id)
+        before_delete = get_item(conn, id)
 
         if before_delete is None:
             return False
 
-        delete_experiment(conn, id)
+        delete_item(conn, id)
 
         conn.commit()
 

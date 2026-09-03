@@ -3,21 +3,21 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, status
 from pydantic import BaseModel, Field
 
-from models import ExperimentCreate, ExperimentResponse
-from database_models import Experiment
+from models import ItemCreate, ItemResponse
+from database_models import Item
 
 from database import (
     init_db,
-    get_experiments,
-    delete_experiment,
+    get_items,
+    delete_item,
 )
 
 from service import (
-    create_experiment_service,
-    get_experiments_service,
-    get_experiment_service,
-    update_experiment_service,
-    delete_experiment_service,
+    create_item_service,
+    get_items_service,
+    get_item_service,
+    update_item_service,
+    delete_item_service,
 )
 
 
@@ -32,67 +32,67 @@ app = FastAPI(lifespan=lifespan)
 
 @app.get("/")
 def root():
-    return {"message": "Experiment API is running"}
+    return {"message": "Item API is running"}
 
 
 @app.post(
-    "/experiments",
-    response_model=ExperimentResponse,
+    "/items",
+    response_model=ItemResponse,
     status_code=status.HTTP_201_CREATED,
 )
-def create_experiment_api(experiment: ExperimentCreate):
-    db_experiment = Experiment(
-        name=experiment.name,
-        frequency=experiment.frequency,
-        damping=experiment.damping,
-        amplitude=experiment.amplitude,
+def create_item_api(item: ItemCreate):
+    db_item = Item(
+        name=item.name,
+        category=item.category,
+        price=item.price,
+        quantity=item.quantity,
     )
 
-    return create_experiment_service(db_experiment)
+    return create_item_service(db_item)
 
 
-@app.get("/experiments", response_model=list[ExperimentResponse])
-def get_experiments_api():
-    return get_experiments_service()
+@app.get("/items", response_model=list[ItemResponse])
+def get_items_api():
+    return get_items_service()
 
 
-@app.get("/experiments/{id}", response_model=ExperimentResponse)
-def get_experiment_api(id: int):
-    row = get_experiment_service(id)
+@app.get("/items/{id}", response_model=ItemResponse)
+def get_item_api(id: int):
+    row = get_item_service(id)
 
     if row is None:
-        raise HTTPException(status_code=404, detail="Experiment not found")
+        raise HTTPException(status_code=404, detail="Item not found")
 
     return row
 
 
 @app.delete(
-    "/experiments/{id}",
+    "/items/{id}",
     status_code=status.HTTP_204_NO_CONTENT,
 )
-def delete_experiment_api(id: int):
-    has_found = delete_experiment_service(id)
+def delete_item_api(id: int):
+    has_found = delete_item_service(id)
 
     if not has_found:
-        raise HTTPException(status_code=404, detail="Experiment not found")
+        raise HTTPException(status_code=404, detail="Item not found")
 
 
-@app.put("/experiments/{id}", response_model=ExperimentResponse)
-def update_experiment_api(id: int, experiment: ExperimentCreate):
-    db_experiment = Experiment(
+@app.put("/items/{id}", response_model=ItemResponse)
+def update_item_api(id: int, item: ItemCreate):
+    db_item = Item(
         id=id,
-        name=experiment.name,
-        frequency=experiment.frequency,
-        damping=experiment.damping,
-        amplitude=experiment.amplitude,
+        name=item.name,
+        category=item.category,
+        price=item.price,
+        quantity=item.quantity,
     )
 
     try:
-        updated_experiment = update_experiment_service(db_experiment)
+        updated_item = update_item_service(db_item)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-    if updated_experiment is None:
-        raise HTTPException(status_code=404, detail="Experiment not found")
+    if updated_item is None:
+        raise HTTPException(status_code=404, detail="Item not found")
 
-    return updated_experiment
+    return updated_item

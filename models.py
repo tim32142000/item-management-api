@@ -1,15 +1,15 @@
 from pydantic import BaseModel, Field
 
-class ExperimentCreate(BaseModel):
-    name: str
-    frequency: float = Field(gt=0)
-    damping: float = Field(ge=0)
-    amplitude: float = Field(gt=0)
+class ItemCreate(BaseModel):
+    name: str = Field(min_length=1)
+    category: str
+    price: int = Field(ge=0)
+    quantity: int = Field(ge=0)
 
 
-class ExperimentResponse(BaseModel):
+class ItemResponse(BaseModel):
     id: int
-    name: str
-    frequency: float
-    damping: float
-    amplitude: float
+    name: str = Field(min_length=1)
+    category: str
+    price: int = Field(ge=0)
+    quantity: int = Field(ge=0)
