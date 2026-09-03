@@ -16,6 +16,7 @@ from service import (
     create_experiment_service,
     get_experiment_service,
     update_experiment_service,
+    delete_experiment_service,
 )
 
 
@@ -49,7 +50,6 @@ def create_experiment_api(experiment: ExperimentCreate):
     return create_experiment_service(db_experiment)
 
 
-
 @app.get("/experiments", response_model=list[ExperimentResponse])
 def get_experiments_api():
     return get_experiments()
@@ -70,9 +70,9 @@ def get_experiment_api(id: int):
     status_code=status.HTTP_204_NO_CONTENT,
 )
 def delete_experiment_api(id: int):
-    is_found = delete_experiment(id)
+    has_found = delete_experiment_service(id)
 
-    if not is_found:
+    if not has_found:
         raise HTTPException(status_code=404, detail="Experiment not found")
 
 
