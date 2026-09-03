@@ -14,6 +14,7 @@ from database import (
 
 from service import (
     create_experiment_service,
+    get_experiments_service,
     get_experiment_service,
     update_experiment_service,
     delete_experiment_service,
@@ -52,7 +53,7 @@ def create_experiment_api(experiment: ExperimentCreate):
 
 @app.get("/experiments", response_model=list[ExperimentResponse])
 def get_experiments_api():
-    return get_experiments()
+    return get_experiments_service()
 
 
 @app.get("/experiments/{id}", response_model=ExperimentResponse)

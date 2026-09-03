@@ -11,6 +11,7 @@ def set_db_name(db_name):
 
 
 def get_connection():
+
     conn = sqlite3.connect(DB_NAME)
     conn.row_factory = sqlite3.Row
     return conn
@@ -32,25 +33,25 @@ def init_db():
     conn.close()
 
 
-def get_experiments() -> list[Experiment]:
-    with get_connection() as conn:
-        cursor = conn.execute("""
-        SELECT *
-        FROM experiments
-        """)
+def get_experiments(conn) -> list[Experiment]:
 
-        rows = cursor.fetchall()
+    cursor = conn.execute("""
+    SELECT *
+    FROM experiments
+    """)
 
-        return [
-            Experiment(
-                id=row["id"],
-                name=row["name"],
-                frequency=row["frequency"],
-                damping=row["damping"],
-                amplitude=row["amplitude"],
-            )
-            for row in rows
-        ]
+    rows = cursor.fetchall()
+
+    return [
+        Experiment(
+            id=row["id"],
+            name=row["name"],
+            frequency=row["frequency"],
+            damping=row["damping"],
+            amplitude=row["amplitude"],
+        )
+        for row in rows
+    ]
 
 
 def get_experiment(conn, id: int) -> Experiment | None:
